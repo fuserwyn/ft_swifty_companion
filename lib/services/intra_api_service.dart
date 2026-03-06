@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/env.dart';
@@ -21,6 +22,14 @@ class IntraApiService {
   DateTime? _tokenExpiresAt;
 
   IntraApiService({http.Client? client}) : _client = client ?? http.Client();
+
+  static String _networkErrorMessage(String action) {
+    if (kIsWeb) {
+      return 'Network error while $action. In web mode, this can be caused by '
+          'browser CORS restrictions. Use Android/iOS run for full API test.';
+    }
+    return 'Network error while $action.';
+  }
 
   Future<Student> fetchStudentByLogin(String login) async {
     if (!Env.isConfigured) {
@@ -45,7 +54,7 @@ class IntraApiService {
         },
       );
     } catch (_) {
-      throw const AppError('Network error while requesting user data.');
+      throw AppError(_networkErrorMessage('requesting user data'));
     }
 
     if (response.statusCode == 404) {
@@ -84,7 +93,7 @@ class IntraApiService {
         },
       );
     } catch (_) {
-      throw const AppError('Network error while requesting user data.');
+      throw AppError(_networkErrorMessage('requesting user data'));
     }
 
     if (response.statusCode == 404) {
@@ -131,7 +140,7 @@ class IntraApiService {
         },
       );
     } catch (_) {
-      throw const AppError('Network error while requesting access token.');
+      throw AppError(_networkErrorMessage('requesting access token'));
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
