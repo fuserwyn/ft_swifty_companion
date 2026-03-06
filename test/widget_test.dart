@@ -13,7 +13,7 @@ void main() {
   testWidgets('Search screen renders', (WidgetTester tester) async {
     await tester.pumpWidget(const SwiftyCompanionApp());
 
-    expect(find.text('Swifty Companion'), findsOneWidget);
+    expect(find.text('Student Profiler'), findsOneWidget);
     expect(find.text('Search'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
   });

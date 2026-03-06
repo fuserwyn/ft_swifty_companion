@@ -24,7 +24,12 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ProfileHeader(student: student),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _ProfileHeader(student: student),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     _InfoCards(student: student),
                     const SizedBox(height: 20),
@@ -33,7 +38,16 @@ class ProfileScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
-                    ...student.skills.map((skill) => _SkillTile(skill: skill)),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          children: student.skills
+                              .map((skill) => _SkillTile(skill: skill))
+                              .toList(),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'Projects',
@@ -67,11 +81,22 @@ class _ProfileHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 42,
-          backgroundImage:
-              student.imageUrl.isNotEmpty ? NetworkImage(student.imageUrl) : null,
-          child: student.imageUrl.isEmpty ? const Icon(Icons.person, size: 36) : null,
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: CircleAvatar(
+            radius: 42,
+            backgroundImage:
+                student.imageUrl.isNotEmpty ? NetworkImage(student.imageUrl) : null,
+            child: student.imageUrl.isEmpty
+                ? const Icon(Icons.person, size: 36)
+                : null,
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -82,6 +107,21 @@ class _ProfileHeader extends StatelessWidget {
               const SizedBox(height: 4),
               Text(student.email),
               Text('Mobile: ${student.phone}'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Chip(
+                    avatar: const Icon(Icons.badge, size: 16),
+                    label: Text(student.login),
+                  ),
+                  Chip(
+                    avatar: const Icon(Icons.school, size: 16),
+                    label: Text('Level ${student.level.toStringAsFixed(2)}'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -118,7 +158,7 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 170,
+      width: 180,
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -149,7 +189,7 @@ class _SkillTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -162,8 +202,14 @@ class _SkillTile extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          LinearProgressIndicator(value: skill.percent / 100),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: skill.percent / 100,
+              minHeight: 8,
+            ),
+          ),
         ],
       ),
     );
@@ -190,7 +236,7 @@ class _ProjectTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         title: Text(project.name),
         subtitle: Text('Mark: ${project.finalMark?.toString() ?? '-'}'),

@@ -147,7 +147,13 @@ run_device: setup
 run_android: setup
 	@export JAVA_HOME="$(JAVA17_HOME)"; \
 	export PATH="$$JAVA_HOME/bin:$$PATH"; \
-	$(FLUTTER) run -d android
+	DEVICE_ID="$$( $(FLUTTER) devices | awk -F '•' '/android-arm|Android/{gsub(/^ +| +$$/,"",$$2); if($$2!=""){print $$2; exit}}' )"; \
+	if [[ -z "$$DEVICE_ID" ]]; then \
+		echo "No Android device found. Run: make devices"; \
+		exit 1; \
+	fi; \
+	echo "Using Android device: $$DEVICE_ID"; \
+	$(FLUTTER) run -d "$$DEVICE_ID"
 
 apk: setup
 	@export JAVA_HOME="$(JAVA17_HOME)"; \
