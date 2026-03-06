@@ -17,7 +17,9 @@ Swifty Companion implemented with Flutter.
 
 - `make check` - verify Flutter and `.env`.
 - `make setup` - create `.env`, recreate `android/ios` if missing, install dependencies.
-- `make install_flutter` - install Flutter with Homebrew (macOS).
+- `make install_flutter` - install Flutter automatically for macOS/Linux.
+- `make install_flutter_macos` - install Flutter with Homebrew.
+- `make install_flutter_linux` - install Flutter with snap (`sudo` required).
 - `make setup_auto` - auto-install Flutter (if needed) + dependencies.
 - `make devices` - list detected devices.
 - `make emulators` - list available emulators.
@@ -27,6 +29,31 @@ Swifty Companion implemented with Flutter.
 - `make run` - launch on connected device/emulator.
 - `make run_device DEVICE=<id>` - run on a specific device.
 - `make run_macos` / `make run_web` - recreate and run desktop/web targets.
+
+## Build Instructions (Makefile)
+
+1. Install Flutter (only if not installed):
+   - `make install_flutter`
+   - Linux alternative: `make install_flutter_linux`
+   - macOS alternative: `make install_flutter_macos`
+2. Prepare project after clone:
+   - `make setup`
+   - This command auto-creates `.env` from `.env.example` and recreates `android/ios` if they were removed from the repository.
+3. Add your 42 API credentials in `.env`:
+   - `INTRA_UID=...`
+   - `INTRA_SECRET=...`
+4. Verify project:
+   - `make analyze`
+   - `make test`
+5. Run app:
+   - `make run` (connected mobile device/emulator)
+   - or `make run_device DEVICE=<id>`
+
+### Minimal Repository Workflow
+
+- The repository can stay minimal (without generated platform folders).
+- On defense machine, run `make setup` to regenerate required folders and install dependencies.
+- Generated folders (`android/`, `ios/`, `.dart_tool/`, `build/`) can be removed locally anytime and recreated with `make setup`.
 
 ## Mandatory coverage
 

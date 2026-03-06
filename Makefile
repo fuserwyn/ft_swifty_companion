@@ -7,7 +7,7 @@ ENV_EXAMPLE := .env.example
 MOBILE_PLATFORMS := android,ios
 DESKTOP_WEB_PLATFORMS := macos,web
 
-.PHONY: help doctor check check_flutter check_env init_env install_flutter \
+.PHONY: help doctor check check_flutter check_env init_env install_flutter install_flutter_macos install_flutter_linux \
 	setup setup_auto deps platforms_mobile platforms_desktop_web \
 	run run_device run_macos run_web \
 	devices emulators start_emulator analyze test clean
@@ -16,7 +16,9 @@ help:
 	@echo "Available targets:"
 	@echo "  make check               - Check Flutter and .env presence"
 	@echo "  make doctor              - Run flutter doctor -v"
-	@echo "  make install_flutter     - Install Flutter via Homebrew (macOS)"
+	@echo "  make install_flutter     - Install Flutter (macOS/Linux auto-detect)"
+	@echo "  make install_flutter_macos - Install Flutter via Homebrew"
+	@echo "  make install_flutter_linux - Install Flutter via snap"
 	@echo "  make setup               - Init .env, recreate android/ios, pub get"
 	@echo "  make setup_auto          - Install Flutter (if needed) + setup"
 	@echo "  make run                 - Run on connected mobile device/emulator"
@@ -53,15 +55,32 @@ doctor: check_flutter
 	$(FLUTTER) doctor -v
 
 install_flutter:
-	@if [[ "$$(uname -s)" != "Darwin" ]]; then \
-		echo "Error: install_flutter is supported only on macOS."; \
+	@if [[ "$$(uname -s)" == "Darwin" ]]; then \
+		$(MAKE) install_flutter_macos; \
+	elif [[ "$$(uname -s)" == "Linux" ]]; then \
+		$(MAKE) install_flutter_linux; \
+	else \
+		echo "Error: unsupported OS for automatic installation."; \
+		echo "Install Flutter manually: https://docs.flutter.dev/get-started/install"; \
 		exit 1; \
 	fi
+
+install_flutter_macos:
 	@if ! command -v brew >/dev/null 2>&1; then \
 		echo "Error: Homebrew is not installed. See https://brew.sh"; \
 		exit 1; \
 	fi
 	brew install --cask flutter
+	@echo "Flutter installed. You can now run: make setup"
+
+install_flutter_linux:
+	@if ! command -v snap >/dev/null 2>&1; then \
+		echo "Error: snap is not installed."; \
+		echo "Install snapd first, then rerun this command."; \
+		echo "Or install Flutter manually: https://docs.flutter.dev/get-started/install/linux"; \
+		exit 1; \
+	fi
+	sudo snap install flutter --classic
 	@echo "Flutter installed. You can now run: make setup"
 
 init_env:
