@@ -1,13 +1,14 @@
 SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
-FLUTTER ?= flutter
+FLUTTER ?= $(shell command -v flutter 2>/dev/null || echo $$HOME/flutter/bin/flutter)
+FLUTTER_VERSION ?= 3.41.4
 ENV_FILE := .env
 ENV_EXAMPLE := .env.example
 MOBILE_PLATFORMS := android,ios
 DESKTOP_WEB_PLATFORMS := macos,web
 
-.PHONY: help doctor check check_flutter check_env init_env install_flutter install_flutter_macos install_flutter_linux \
+.PHONY: help doctor check check_flutter check_env init_env install_flutter install_flutter_macos install_flutter_linux install_flutter_local \
 	setup setup_auto deps platforms_mobile platforms_desktop_web \
 	run run_device run_macos run_web \
 	devices emulators start_emulator analyze test clean
@@ -19,6 +20,7 @@ help:
 	@echo "  make install_flutter     - Install Flutter (macOS/Linux auto-detect)"
 	@echo "  make install_flutter_macos - Install Flutter via Homebrew"
 	@echo "  make install_flutter_linux - Install Flutter via snap"
+	@echo "  make install_flutter_local - Install Flutter to $$HOME/flutter (Linux, no sudo)"
 	@echo "  make setup               - Init .env, recreate android/ios, pub get"
 	@echo "  make setup_auto          - Install Flutter (if needed) + setup"
 	@echo "  make run                 - Run on connected mobile device/emulator"
@@ -33,9 +35,9 @@ help:
 	@echo "  make clean               - flutter clean"
 
 check_flutter:
-	@if ! command -v "$(FLUTTER)" >/dev/null 2>&1; then \
+	@if [[ ! -x "$(FLUTTER)" ]]; then \
 		echo "Error: Flutter is not installed or not in PATH."; \
-		echo "Run: make install_flutter"; \
+		echo "Run: make install_flutter (or make install_flutter_local on Linux)"; \
 		exit 1; \
 	fi
 	@echo "Flutter SDK found: $$($(FLUTTER) --version | sed -n '1p')"
@@ -58,7 +60,11 @@ install_flutter:
 	@if [[ "$$(uname -s)" == "Darwin" ]]; then \
 		$(MAKE) install_flutter_macos; \
 	elif [[ "$$(uname -s)" == "Linux" ]]; then \
-		$(MAKE) install_flutter_linux; \
+		if command -v snap >/dev/null 2>&1; then \
+			$(MAKE) install_flutter_linux; \
+		else \
+			$(MAKE) install_flutter_local; \
+		fi; \
 	else \
 		echo "Error: unsupported OS for automatic installation."; \
 		echo "Install Flutter manually: https://docs.flutter.dev/get-started/install"; \
@@ -76,12 +82,29 @@ install_flutter_macos:
 install_flutter_linux:
 	@if ! command -v snap >/dev/null 2>&1; then \
 		echo "Error: snap is not installed."; \
-		echo "Install snapd first, then rerun this command."; \
-		echo "Or install Flutter manually: https://docs.flutter.dev/get-started/install/linux"; \
+		echo "Run: make install_flutter_local (no sudo install in HOME)."; \
 		exit 1; \
 	fi
 	sudo snap install flutter --classic
 	@echo "Flutter installed. You can now run: make setup"
+
+install_flutter_local:
+	@if [[ "$$(uname -s)" != "Linux" ]]; then \
+		echo "Error: install_flutter_local is for Linux only."; \
+		exit 1; \
+	fi
+	@ARCH="$$(uname -m)"; \
+	if [[ "$$ARCH" == "x86_64" ]]; then ARCH="x64"; \
+	elif [[ "$$ARCH" == "aarch64" || "$$ARCH" == "arm64" ]]; then ARCH="arm64"; \
+	else echo "Error: unsupported Linux arch $$ARCH"; exit 1; fi; \
+	URL="https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$$ARCH_$(FLUTTER_VERSION)-stable.tar.xz"; \
+	echo "Downloading Flutter $(FLUTTER_VERSION) for $$ARCH..."; \
+	curl -L "$$URL" -o /tmp/flutter-$(FLUTTER_VERSION)-stable.tar.xz; \
+	rm -rf "$$HOME/flutter"; \
+	tar xf /tmp/flutter-$(FLUTTER_VERSION)-stable.tar.xz -C "$$HOME"; \
+	rm -f /tmp/flutter-$(FLUTTER_VERSION)-stable.tar.xz; \
+	echo "Installed to $$HOME/flutter"; \
+	echo 'Add to PATH: export PATH="$$HOME/flutter/bin:$$PATH"'
 
 init_env:
 	@if [[ ! -f "$(ENV_FILE)" ]]; then \

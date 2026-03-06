@@ -20,6 +20,7 @@ Swifty Companion implemented with Flutter.
 - `make install_flutter` - install Flutter automatically for macOS/Linux.
 - `make install_flutter_macos` - install Flutter with Homebrew.
 - `make install_flutter_linux` - install Flutter with snap (`sudo` required).
+- `make install_flutter_local` - install Flutter in `$HOME/flutter` (Linux, no sudo).
 - `make setup_auto` - auto-install Flutter (if needed) + dependencies.
 - `make devices` - list detected devices.
 - `make emulators` - list available emulators.
@@ -35,6 +36,7 @@ Swifty Companion implemented with Flutter.
 1. Install Flutter (only if not installed):
    - `make install_flutter`
    - Linux alternative: `make install_flutter_linux`
+   - Linux without sudo: `make install_flutter_local`
    - macOS alternative: `make install_flutter_macos`
 2. Prepare project after clone:
    - `make setup`
