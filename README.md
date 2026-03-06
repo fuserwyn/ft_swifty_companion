@@ -19,9 +19,14 @@ Swifty Companion implemented with Flutter.
 - `make setup` - create `.env`, recreate `android/ios` if missing, install dependencies.
 - `make install_flutter` - install Flutter with Homebrew (macOS).
 - `make setup_auto` - auto-install Flutter (if needed) + dependencies.
+- `make devices` - list detected devices.
+- `make emulators` - list available emulators.
+- `make start_emulator EMULATOR=<id>` - launch an emulator.
 - `make analyze` - static checks.
 - `make test` - run tests.
 - `make run` - launch on connected device/emulator.
+- `make run_device DEVICE=<id>` - run on a specific device.
+- `make run_macos` / `make run_web` - recreate and run desktop/web targets.
 
 ## Mandatory coverage
 
