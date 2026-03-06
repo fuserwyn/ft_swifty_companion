@@ -10,7 +10,7 @@ ENV_EXAMPLE := .env.example
 MOBILE_PLATFORMS := android,ios
 
 .PHONY: help check install_flutter install_flutter_macos install_flutter_linux install_flutter_local \
-	setup_android_phone setup devices run run_device run_android apk analyze test clean \
+	setup_android_phone setup devices run run_device run_android apk unapk analyze test clean \
 	bootstrap validate ready all
 
 help:
@@ -27,6 +27,7 @@ help:
 	@echo "  make run_android          - Run on first Android device"
 	@echo "  make run_device DEVICE=<id> - Run on a specific device id"
 	@echo "  make apk                  - Build release APK"
+	@echo "  make unapk                - Remove APK/build artifacts"
 	@echo "  make analyze              - Run static analysis"
 	@echo "  make test                 - Run tests"
 	@echo "  make clean                - flutter clean"
@@ -152,6 +153,11 @@ apk: setup
 	@export JAVA_HOME="$(JAVA17_HOME)"; \
 	export PATH="$$JAVA_HOME/bin:$$PATH"; \
 	$(FLUTTER) build apk
+
+unapk: _check_flutter
+	$(FLUTTER) clean
+	rm -rf build .dart_tool
+	@echo "APK and build artifacts removed."
 
 analyze: setup
 	$(FLUTTER) analyze
