@@ -33,6 +33,7 @@ class Student {
     required this.level,
     required this.location,
     required this.wallet,
+    required this.evaluationPoints,
     required this.skills,
     required this.projects,
   });
@@ -44,6 +45,7 @@ class Student {
   final double level;
   final String location;
   final int wallet;
+  final int evaluationPoints;
   final List<Skill> skills;
   final List<Project> projects;
 
@@ -98,6 +100,7 @@ class Student {
       level: _toDouble(selectedCursus?['level']),
       location: (json['location'] ?? 'Unavailable').toString(),
       wallet: _toIntOrNull(json['wallet']) ?? 0,
+      evaluationPoints: _toIntOrNull(json['correction_point']) ?? 0,
       skills: skills,
       projects: projects,
     );

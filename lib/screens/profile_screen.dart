@@ -144,6 +144,10 @@ class _InfoCards extends StatelessWidget {
         _InfoCard(label: 'Level', value: student.level.toStringAsFixed(2)),
         _InfoCard(label: 'Location', value: student.location),
         _InfoCard(label: 'Wallet', value: '${student.wallet} ₳'),
+        _InfoCard(
+          label: 'Evaluation points',
+          value: student.evaluationPoints.toString(),
+        ),
       ],
     );
   }

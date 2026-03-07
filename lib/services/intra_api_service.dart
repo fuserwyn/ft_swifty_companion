@@ -16,12 +16,20 @@ class IntraApiService {
   static const _apiBase = 'https://api.intra.42.fr';
   static const _oauthTokenPath = '/oauth/token';
   static const _usersPath = '/v2/users';
+  static const _tokenSafetyMarginSeconds = 30;
+  static const int _debugTokenTtlOverrideSeconds = 60;
 
   final http.Client _client;
   String? _accessToken;
   DateTime? _tokenExpiresAt;
 
   IntraApiService({http.Client? client}) : _client = client ?? http.Client();
+
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint('[IntraApiService] $message');
+    }
+  }
 
   static String _networkErrorMessage(String action) {
     if (kIsWeb) {
@@ -47,12 +55,14 @@ class IntraApiService {
     final uri = Uri.parse('$_apiBase$_usersPath/$normalizedLogin');
     late http.Response response;
     try {
+      _debugLog('GET $uri');
       response = await _client.get(
         uri,
         headers: {
           'Authorization': 'Bearer $token',
         },
       );
+      _debugLog('GET /v2/users/$normalizedLogin -> ${response.statusCode}');
     } catch (_) {
       throw AppError(_networkErrorMessage('requesting user data'));
     }
@@ -63,6 +73,7 @@ class IntraApiService {
 
     if (response.statusCode == 401) {
       // Token can be revoked before its expiration; force refresh once.
+      _debugLog('401 received, forcing token refresh and retry.');
       _accessToken = null;
       _tokenExpiresAt = null;
       return _fetchWithFreshToken(normalizedLogin);
@@ -86,12 +97,14 @@ class IntraApiService {
     final uri = Uri.parse('$_apiBase$_usersPath/$login');
     late http.Response response;
     try {
+      _debugLog('GET (retry) $uri');
       response = await _client.get(
         uri,
         headers: {
           'Authorization': 'Bearer $token',
         },
       );
+      _debugLog('GET /v2/users/$login (retry) -> ${response.statusCode}');
     } catch (_) {
       throw AppError(_networkErrorMessage('requesting user data'));
     }
@@ -117,9 +130,11 @@ class IntraApiService {
     final expiresAt = _tokenExpiresAt;
 
     if (token != null && expiresAt != null && now.isBefore(expiresAt)) {
+      _debugLog('Using cached OAuth token (expires at $expiresAt).');
       return token;
     }
 
+    _debugLog('Requesting new OAuth token (missing or expired cache).');
     final newToken = await _requestNewToken();
     _accessToken = newToken;
     return newToken;
@@ -130,6 +145,7 @@ class IntraApiService {
     late http.Response response;
 
     try {
+      _debugLog('POST $uri');
       response = await _client.post(
         uri,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -139,6 +155,7 @@ class IntraApiService {
           'client_secret': Env.secret,
         },
       );
+      _debugLog('POST /oauth/token -> ${response.statusCode}');
     } catch (_) {
       throw AppError(_networkErrorMessage('requesting access token'));
     }
@@ -158,8 +175,24 @@ class IntraApiService {
       throw const AppError('Received invalid OAuth token response.');
     }
 
-    // Refresh token 30 seconds before expiry to avoid edge cases.
-    _tokenExpiresAt = DateTime.now().add(Duration(seconds: expiresIn - 30));
+    // In debug builds, allow a short fixed TTL for easy defense/demo.
+    final now = DateTime.now();
+    final serverExpiresAt = now.add(Duration(seconds: expiresIn));
+    final effectiveTtlSeconds =
+        kDebugMode
+            ? _debugTokenTtlOverrideSeconds
+            : (expiresIn - _tokenSafetyMarginSeconds).clamp(1, expiresIn).toInt();
+    final cachedExpiresAt = now.add(Duration(seconds: effectiveTtlSeconds));
+    _debugLog(
+      'OAuth TTL: expires_in=$expiresIn sec, '
+      'safety_margin=$_tokenSafetyMarginSeconds sec, '
+      'effective_ttl=$effectiveTtlSeconds sec'
+      '${kDebugMode ? ' (debug override)' : ''}.',
+    );
+    _debugLog('Server token expires at $serverExpiresAt.');
+    _debugLog('Cached token expires at $cachedExpiresAt.');
+    _tokenExpiresAt = cachedExpiresAt;
+    _debugLog('Cached OAuth token until $_tokenExpiresAt.');
     return accessToken;
   }
 }
