@@ -1,0 +1,6 @@
+// Base config. Credentials are read from ../.env (git-ignored).
+// .env format: KEY=value, one per line, no quotes, no comments.
+INTRA_UID =
+INTRA_SECRET =
+
+#include? "../.env"
